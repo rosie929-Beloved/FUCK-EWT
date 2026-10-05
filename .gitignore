@@ -1,0 +1,12 @@
+# 系统与编辑器
+.workbuddy/
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# 依赖与构建产物
+node_modules/
+dist/
+*.log
