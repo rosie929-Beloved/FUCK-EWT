@@ -10,3 +10,6 @@ Thumbs.db
 node_modules/
 dist/
 *.log
+
+# 本地推送助手
+push-to-github.bat
