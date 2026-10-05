@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         EWT LLM Bridge (答案生成管道)
-// @namespace    https://github.com/ewt-study-helper
+// @namespace    https://github.com/rosie929-Beloved/FUCK-EWT
 // @version      3.0.0
 // @description  负责调用智谱 GLM 生成答案，通过 postMessage 与主脚本通信。API Key 由用户在界面里自行配置、本地保存（GM_setValue），不会上传到任何服务器，也不会写进脚本源码。另提供 GM 文本抓取（用于加载 html2canvas）。不做任何 DOM 操作。
-// @author       ewt-study-helper
+// @author       rosie929-Beloved
 // @match        https://web.ewt360.com/answer-pc/*
 // @match        http://web.ewt360.com/answer-pc/*
 // @match        https://web.ewt360.com/*

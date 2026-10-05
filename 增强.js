@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         EWT 作业学习助手
-// @namespace    https://github.com/ewt-study-helper
+// @namespace    https://github.com/rosie929-Beloved/FUCK-EWT
 // @version      3.9.0
 // @description  升学E网通答题页自动化：自动作答（识图/公式截图/语法填空/手写上传题，答案由智谱 GLM 生成，需自行配置 API Key）/自动过检/自动提交/自批满分；视频页：2X 倍速/自动跳过/自动连播/锁进度条/认真度检测秒过。需配合 ewt-llm-bridge.user.js 使用，使用教程见仓库内《新手指南.md》。
-// @author       ewt-study-helper
+// @author       rosie929-Beloved
 // @license      MIT
 // @match        https://teacher.ewt360.com/ewtbend/bend/index/index.html*
 // @match        http://teacher.ewt360.com/ewtbend/bend/index/index.html*
