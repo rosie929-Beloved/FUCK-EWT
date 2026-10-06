@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EWT LLM Bridge (答案生成管道)
 // @namespace    https://github.com/rosie929-Beloved/FUCK-EWT
-// @version      3.0.0
+// @version      3.0.1
 // @description  负责调用智谱 GLM 生成答案，通过 postMessage 与主脚本通信。API Key 由用户在界面里自行配置、本地保存（GM_setValue），不会上传到任何服务器，也不会写进脚本源码。另提供 GM 文本抓取（用于加载 html2canvas）。不做任何 DOM 操作。
 // @author       rosie929-Beloved
 // @match        https://web.ewt360.com/answer-pc/*
@@ -363,7 +363,13 @@
     };
   }
 
-  /* 从响应中提取文本（兼容 chat/completions 与 responses 两种协议） */
+  /* 从响应中提取文本（兼容 chat/completions 与 responses 两种协议）
+   *
+   * 注意：GLM-5.3 系列「强制思考且不可关闭」（官方限制），思考内容写在
+   * message.reasoning_content 里，而 message.content 才是正文。
+   * 当 max_tokens 过小、token 全被思考链吃掉时，content 会是空串而
+   * reasoning_content 有内容 —— 这时退而取 reasoning_content，
+   * 避免把"有响应"误判成"返回内容为空"。 */
   function extractText(json) {
     let out = '';
     // chat/completions
@@ -371,6 +377,10 @@
     if (c) {
       if (c.message && typeof c.message.content === 'string') out = c.message.content;
       else if (typeof c.text === 'string') out = c.text;
+      // 正文为空时，退回思考内容（GLM-5.3 被 max_tokens 截断的典型情形）
+      if (!out && c.message && typeof c.message.reasoning_content === 'string') {
+        out = c.message.reasoning_content;
+      }
     }
     // responses（保留：日后若再加 responses 协议的通道可直接用）
     if (!out && Array.isArray(json.output)) {
@@ -378,6 +388,12 @@
         if (Array.isArray(item.content)) {
           for (const cc of item.content) {
             if (cc.type === 'output_text' && cc.text) out += cc.text;
+          }
+        }
+        // reasoning summary 兜底
+        if (!out && item.type === 'reasoning' && Array.isArray(item.summary)) {
+          for (const s of item.summary) {
+            if (s && s.type === 'summary_text' && s.text) out += s.text;
           }
         }
       }
@@ -598,7 +614,12 @@
   }
 
   /* 连通测试：发一条极短请求，只看能否拿到合法响应。
-   * 用配置里生效的 baseUrl + vision 模型 + 明文 key。 */
+   * 用配置里生效的 baseUrl + vision 模型 + 明文 key。
+   *
+   * ⚠️ max_tokens 不能给小：GLM-5.3 系列强制思考且不可关闭，
+   *    思维链会先消耗 token。若上限太小（如 8），token 全花在思考上，
+   *    正文被截断成空串，会被误报为「返回内容为空」。
+   *    这里给足 512，并把 reasoning_effort 压到 low 以加快返回。 */
   function testConfig(override) {
     const merged = { ...loadConfig(), ...(override || {}) };
     const e = resolveEffective(merged);
@@ -617,7 +638,9 @@
           model,
           messages: [{ role: 'user', content: '回复一个字：好' }],
           stream: false,
-          max_tokens: 8,
+          max_tokens: 512,
+          thinking: { type: 'enabled', clear_thinking: false },
+          reasoning_effort: 'low',
         }),
         timeout: 30000,
         onload: (res) => {
